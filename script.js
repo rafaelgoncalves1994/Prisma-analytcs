@@ -49,7 +49,7 @@ Gere uma interpretação breve e clara sobre os padrões ou relações observada
 - Duas recomendações práticas para melhorar o desempenho ou o bem-estar.
 
 ## Regras
-- Limite-se a 1500 caracteres.
+- Limite-se a um minimo de 1500 a 2000 caracteres.
 - Escreva em linguagem acessível, mas mantendo rigor acadêmico.
 - Formate em Markdown, sem introduções ou despedidas.
 
