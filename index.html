@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prisma Analytics</title>
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <img src="/assets/FOA-JPG.jpg" alt="Logo Prisma Analytics" />
+        <h1>Prisma Analytics</h1>
+        <p class="subtitle">Transformando dados em conhecimento e aprendizado.</p>
+    </header>
+
+    <main>
+        <section class="card">
+            <div class="card-inner">
+                <h2 class="title">Gerar Análise Inteligente</h2>
+                <p class="lead">Selecione o tema, carregue a API Key do Gemini e descreva sua pergunta para gerar uma análise personalizada.</p>
+
+                <!-- Formulário principal -->
+                <form id="form">
+                    <input id="apiKey" type="password" placeholder="Informe a API KEY" />
+
+                    <select id="temaSelect" required>
+                        <option value="">Selecione um tema</option>
+                        <option value="rotina">Rotina e Sono</option>
+                        <option value="conexoes">Conexões Sociais</option>
+                        <option value="foco">Foco e Concentração</option>
+                        <option value="habitos">Hábitos de Estudo</option>
+                        <option value="motivacao">Motivação e Engajamento</option>
+                        <option value="tecnologia">Uso de Tecnologia</option>
+                        <option value="bemestar">Bem-Estar Acadêmico</option>
+                        <option value="grupo">Trabalho em Grupo</option>
+                        <option value="metas">Metas e Desempenho</option>
+                        <option value="criatividade">Lazer e Criatividade</option>
+                    </select>
+
+                    <input id="questionInput" type="text" placeholder="Ex: Há correlação entre tempo de estudo e bem-estar emocional?" required>
+
+                    <div class="actions">
+                        <button id="askButton" type="submit">Gerar Análise</button>
+                        <button id="resetButton" type="button" class="ghost">Limpar</button>
+                    </div>
+                </form>
+
+                <!-- Área de resultado -->
+                <div id="result" class="hidden">
+                    <div class="result-left">
+                        <img id="chartImage" src="./assets/placeholder.png" alt="Gráfico do tema selecionado" />
+                        <p class="img-note">Adicione seus gráficos em <code>/assets</code> com os nomes definidos no script.</p>
+                    </div>
+
+                    <div class="result-right">
+                        <div id="aiResponse" class="response">
+                            <!-- Conteúdo gerado pela IA -->
+                        </div>
+
+                        <div class="controls">
+                            <button id="downloadBtn" class="small">Salvar análise (TXT)</button>
+                            <button id="shareBtn" class="small ghost">Copiar texto</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>© Prisma Analytics — análises educacionais orientadas por dados. Interprete com criticidade e base em evidências.</p>
+    </footer>
+
+    <script src="https://unpkg.com/showdown/dist/showdown.min.js"></script>
+    <script src="./script.js"></script>
+</body>
+
+</html>
