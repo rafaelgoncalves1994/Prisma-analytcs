@@ -61,7 +61,7 @@ header .subtitle {
 
 /* Layout Principal */
 main {
-    max-width: 70rem; /* 🔹 aumentada a largura geral */
+    max-width: 100rem; /* 🔹 aumentada a largura geral */
     width: 90%;
     margin: 2.5rem auto;
 }
@@ -184,12 +184,14 @@ button.small {
     border-radius: 8px;
     background: #111;
     border: 1px solid rgba(255,255,255,0.04);
+    
+    
 }
 
 .img-note {
     margin-top: 0.5rem;
     color: var(--muted);
-    font-size: 0.82rem;
+    font-size: 0.4rem;
 }
 
 .response {
@@ -201,7 +203,7 @@ button.small {
     min-height: 12rem;
     overflow: auto;
     width: 100%;
-    font-size: 0.95rem;
+    font-size: 2rem;
     color: #fff;
 }
 
