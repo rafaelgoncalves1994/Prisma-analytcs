@@ -15,8 +15,19 @@
 
 <body>
     <header>
-        <img src="./assets/FOA-JPG.jpg" alt="Logo Prisma Analytics" />
-        <h1>Prisma Analytics</h1>
+         <div class="header-banner"> 
+        <div class="header-banner-left">
+            <a href="./tutorial.html" class="tutorial-link">Tutorial</a>
+        </div>
+
+        <div class="header-banner-right">
+            <a href="https://www.unifoa.edu.br/" target="_blank" rel="noopener noreferrer">
+            <img src="./assets/FOA-JPG.jpg" alt="Foto do cabeçalho" class="header-photo"></a>
+        </div>
+    </div>
+
+        <img class="logo" src="./assets/logo.png" alt="Logo Prisma Analytics" />
+        <h1>Sua jornada guiada pela inteligência dos dados.</h1>
         <p class="subtitle">Transformando dados em conhecimento e aprendizado.</p>
     </header>
 
@@ -26,7 +37,7 @@
                 <h2 class="title">Gerar Análise Inteligente</h2>
                 <p class="lead">Selecione o tema, carregue a API Key do Gemini e descreva sua pergunta para gerar uma análise personalizada.</p>
 
-                <!-- Formulário principal -->
+                
                 <form id="form">
                     <input id="apiKey" type="password" placeholder="Informe a API KEY" />
 
@@ -52,11 +63,10 @@
                     </div>
                 </form>
 
-                <!-- Área de resultado -->
                 <div id="result" class="hidden">
                     <div class="result-left">
                         <img id="chartImage" src="./assets/placeholder.png" alt="Gráfico do tema selecionado" />
-                        <p class="img-note">Adicione seus gráficos em <code>/assets</code> com os nomes definidos no script.</p>
+                        <p class="img-note"></p>
                     </div>
 
                     <div class="result-right">
