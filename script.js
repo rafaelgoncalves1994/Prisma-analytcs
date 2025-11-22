@@ -7,51 +7,51 @@ const resetButton = document.getElementById("resetButton");
 const aiResponse = document.getElementById("aiResponse");
 const form = document.getElementById("form");
 const result = document.getElementById("result");
-const chartImage = document.getElementById("chartImage");
+// Elementos removidos/alterados no novo fluxo:
+const chartImage = document.getElementById("chartImage"); // Gráfico não é mais o foco
 const downloadBtn = document.getElementById("downloadBtn");
 const shareBtn = document.getElementById("shareBtn");
 
 /* --- Conversor Markdown -> HTML --- */
+// (showdown.Converter precisa ser carregado no seu HTML)
 const markdownToHTML = (text) => {
   const converter = new showdown.Converter();
   return converter.makeHtml(text);
 };
 
-/* --- Mapeamento de imagens ---
-   Atualizado com os novos temas do Prisma Analytics */
-const imageMap = {
-  rotina: "./assets/grafico_rotina.png",
-  conexoes: "./assets/grafico_conexoes.png",
-  foco: "./assets/grafico_foco.png",
-  habitos: "./assets/grafico_habitos.png",
-  motivacao: "./assets/grafico_motivacao.png",
-  tecnologia: "./assets/grafico_tecnologia.png",
-  bemestar: "./assets/grafico_bemestar.png",
-  grupo: "./assets/grafico_grupo.png",
-  metas: "./assets/grafico_metas.png",
-  criatividade: "./assets/grafico_criatividade.png",
-};
 
-/* --- Construção do prompt para a IA --- */
-const buildPrompt = (tema, pergunta) => {
+const imageMap = {};
+
+// --- NOVO PROMPT ADAPTADO ---
+const buildStatisticalDataPrompt = (tema, pergunta) => {
   return `
 ## Especialidade
-Você é um analista de dados educacionais no Prisma Analytics, especialista em comportamento humano e estatísticas aplicadas à aprendizagem.
+Você é um Engenheiro de Dados Educacionais no Prisma DataGen, especializado em **simulação de dados** para fins didáticos e aplicação de **distribuições estatísticas** em contextos de aprendizagem.
 
 ## Contexto
-Tema: ${tema}
-Pergunta: ${pergunta}
+**Tema:** ${tema} (Define o contexto das variáveis e dos dados)
+**Pergunta/Requisito:** ${pergunta} (Define o foco da análise ou a distribuição estatística a ser aplicada)
 
 ## Tarefa
-Gere uma interpretação breve e clara sobre os padrões ou relações observadas no gráfico, abordando:
-- O que os dados sugerem sobre o comportamento estudantil.
-- Possíveis causas e impactos educacionais.
-- Duas recomendações práticas para melhorar o desempenho ou o bem-estar.
+Gere um **conjunto de dados simulados** seguindo as especificações abaixo. O contexto das variáveis deve ser relevante ao **Tema** (ex: ${tema}), e a distribuição principal deve ser definida pelo **Requisito** (pergunta/distribuição solicitada pelo usuário, ou uma distribuição plausível se não especificada).
+
+1.  **Gere uma tabela completa em formato Markdown com exatamente 50 linhas** (1 de cabeçalho + 49 amostras).
+2.  A tabela deve incluir:
+    * **Uma coluna de Variável Principal**, simulando uma métrica de tempo, desempenho, ou comportamento chave, **aplicando a distribuição estatística sugerida pelo Requisito** (ou assumindo uma distribuição normal/plausível se não especificada).
+    * **Pelo menos duas colunas adicionais de Variáveis Relacionadas**, cujos valores devem simular uma relação realista com a Variável Principal e com o contexto do **Tema**.
+3.  Os valores devem ser **aleatórios, não repetitivos** e simular variabilidade realista. **Se necessário, utilize seu acesso a informações externas para simular dados mais realistas.**
+
+**Após a tabela, inclua uma seção de Análise Didática:**
+- Explique de forma clara o que cada coluna de dados representa, correlacionando com o **Tema**.
+- Descreva a **distribuição estatística** aplicada à Variável Principal e o motivo de sua escolha (se foi a do Requisito ou uma suposição).
+- Explique a **relação simulada** entre a Variável Principal e as duas Variáveis Relacionadas, focando no propósito didático.
 
 ## Regras
-- Limite-se a um minimo de 1500 a 2000 caracteres.
-- Escreva em linguagem acessível, mas mantendo rigor acadêmico.
-- Formate em Markdown, sem introduções ou despedidas.
+- **NUNCA** indique código externo para geração de dados.
+- O resultado deve ser **SOMENTE** o conteúdo gerado (tabela + análise), **sem introduções ou despedidas.**
+- **Não inclua resumo da tabela**. Apresente a tabela por completo.
+- Mantenha um estilo **claro, didático e rigoroso**, adequado ao ensino de estatística.
+- **Limite-se a um minimo de 1000 caracteres no total** (incluindo a tabela e a análise didática).
 
 Agora produza a resposta.
 `;
@@ -60,14 +60,14 @@ Agora produza a resposta.
 /* --- Função para gerar análise usando API --- */
 const gerarAnaliseAI = async (prompt, apiKey) => {
   if (!apiKey) {
-    return `**Modo offline (simulação):** Sem API Key, não é possível gerar interpretação automática.  
-Sugestão: analise médias, tendências e correlações. Por exemplo, se a curva de foco cai com o uso intenso de tecnologia, incentive pausas digitais e rotinas de descanso ativo.`;
+    return `**Modo offline (simulação):** Sem API Key, não é possível gerar dados simulados.`;
   }
 
   const model = "gemini-2.5-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const contents = [{ role: "user", parts: [{ text: prompt }] }];
+  // Mantenha o Google Search (tools) para permitir a busca de "dados reais"
   const tools = [{ google_search: {} }];
 
   try {
@@ -79,7 +79,18 @@ Sugestão: analise médias, tendências e correlações. Por exemplo, se a curva
 
     const data = await resp.json();
     if (!data?.candidates?.length) throw new Error("Resposta inválida da API");
-    return data.candidates[0].content.parts[0].text;
+    // Se a API retornar a resposta dentro de uma chamada de função (tool call),
+    // é necessário buscar o texto do resultado.
+    const resultText = data.candidates[0].content.parts[0].text;
+
+    // Verifica se houve uma chamada de ferramenta (tool) e retorna a resposta do assistente
+    if (data.candidates[0].content.parts[0].functionCall) {
+      // Para este caso, a resposta completa deve ser processada no próximo passo da interação
+      // Como o prompt pede que a IA gere a tabela diretamente, a resposta deve vir no 'text'
+      return resultText;
+    }
+
+    return resultText;
   } catch (err) {
     console.error("Erro ao gerar análise:", err);
     return `**Erro:** falha ao obter resposta. Verifique sua API Key e conexão.`;
@@ -110,19 +121,25 @@ const enviarFormulario = async (event) => {
     return;
   }
 
-  chartImage.src = imageMap[tema] || "./assets/FOA-JPG.jpg";
+  // --- ALTERAÇÃO PRINCIPAL AQUI: Gráfico Removido/Substituído ---
+  // A imagem não faz mais sentido, mas deixo o elemento 'chartImage'
+  // apontando para um placeholder, caso a estrutura visual precise dele.
+  chartImage.src = "./assets/placeholder.png";
+
   result.classList.remove("hidden");
-  aiResponse.innerHTML = "<p>Gerando análise...</p>";
+  aiResponse.innerHTML = "<p>Gerando dados simulados...</p>";
 
   askButton.disabled = true;
   askButton.textContent = "Gerando...";
 
-  const prompt = buildPrompt(tema, question);
+  // --- ALTERAÇÃO CRUCIAL AQUI: Chamada da Nova Função do Prompt ---
+  const prompt = buildStatisticalDataPrompt(tema, question);
   const rawText = await gerarAnaliseAI(prompt, apiKey);
+
   aiResponse.innerHTML = markdownToHTML(rawText);
 
   askButton.disabled = false;
-  askButton.textContent = "Gerar Análise";
+  askButton.textContent = "Gerar Dados"; // Mudança de texto
 };
 
 /* --- Resetar formulário --- */
@@ -130,7 +147,7 @@ const resetForm = () => {
   form.reset();
   result.classList.add("hidden");
   aiResponse.innerHTML = "";
-  chartImage.src = "./assets/placeholder.png";
+  chartImage.src = "./assets/placeholder.png"; // Reset da imagem/placeholder
 };
 
 /* --- Copiar texto --- */
@@ -147,10 +164,10 @@ const copiarTexto = () => {
 const salvarAnalise = () => {
   const text = aiResponse.innerText || aiResponse.textContent || "";
   if (!text) {
-    alert("Nenhuma análise disponível para salvar.");
+    alert("Nenhum dado simulado disponível para salvar.");
     return;
   }
-  const tema = temaSelect.value || "analise";
+  const tema = temaSelect.value || "dados_simulados";
   const filename = `prisma_${tema}_${new Date()
     .toISOString()
     .slice(0, 10)}.txt`;
