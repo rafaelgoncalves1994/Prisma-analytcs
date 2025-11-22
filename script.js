@@ -7,67 +7,99 @@ const resetButton = document.getElementById("resetButton");
 const aiResponse = document.getElementById("aiResponse");
 const form = document.getElementById("form");
 const result = document.getElementById("result");
-// Elementos removidos/alterados no novo fluxo:
-const chartImage = document.getElementById("chartImage"); // Gráfico não é mais o foco
+const chartImage = document.getElementById("chartImage");
 const downloadBtn = document.getElementById("downloadBtn");
 const shareBtn = document.getElementById("shareBtn");
 
+/* --- CSV → Markdown converter --- */
+const csvToMarkdown = (csv) => {
+  const rows = csv.trim().split("\n");
+  const table = rows.map((row) => {
+    return "| " + row.split(",").join(" | ") + " |";
+  });
+
+  const header = table[0];
+  const separator = header.replace(/[^|]/g, "-");
+
+  return [header, separator, ...table.slice(1)].join("\n");
+};
+
 /* --- Conversor Markdown -> HTML --- */
-// (showdown.Converter precisa ser carregado no seu HTML)
 const markdownToHTML = (text) => {
   const converter = new showdown.Converter();
   return converter.makeHtml(text);
 };
 
-
 const imageMap = {};
 
-// --- NOVO PROMPT ADAPTADO ---
+/* --- NOVO PROMPT (VERSÃO CSV DEFINITIVA) --- */
 const buildStatisticalDataPrompt = (tema, pergunta) => {
   return `
 ## Especialidade
-Você é um Engenheiro de Dados Educacionais no Prisma DataGen, especializado em **simulação de dados** para fins didáticos e aplicação de **distribuições estatísticas** em contextos de aprendizagem.
+Você é um Engenheiro de Dados Educacionais especializado em simulação de dados, utilizando distribuições estatísticas aplicáveis ao comportamento humano e aprendizagem.
 
 ## Contexto
-**Tema:** ${tema} (Define o contexto das variáveis e dos dados)
-**Pergunta/Requisito:** ${pergunta} (Define o foco da análise ou a distribuição estatística a ser aplicada)
+Tema: ${tema}
+Pergunta/Requisito: ${pergunta}
 
 ## Tarefa
-Gere um **conjunto de dados simulados** seguindo as especificações abaixo. O contexto das variáveis deve ser relevante ao **Tema** (ex: ${tema}), e a distribuição principal deve ser definida pelo **Requisito** (pergunta/distribuição solicitada pelo usuário, ou uma distribuição plausível se não especificada).
+Gere um conjunto de **dados simulados** seguindo os requisitos abaixo.
 
-1.  **Gere uma tabela completa em formato Markdown com exatamente 50 linhas** (1 de cabeçalho + 49 amostras).
-2.  A tabela deve incluir:
-    * **Uma coluna de Variável Principal**, simulando uma métrica de tempo, desempenho, ou comportamento chave, **aplicando a distribuição estatística sugerida pelo Requisito** (ou assumindo uma distribuição normal/plausível se não especificada).
-    * **Pelo menos duas colunas adicionais de Variáveis Relacionadas**, cujos valores devem simular uma relação realista com a Variável Principal e com o contexto do **Tema**.
-3.  Os valores devem ser **aleatórios, não repetitivos** e simular variabilidade realista. **Se necessário, utilize seu acesso a informações externas para simular dados mais realistas.**
+### ✔ FORMATO OBRIGATÓRIO DA TABELA (CSV)
+A tabela **DEVE** ser gerada EXCLUSIVAMENTE no formato **CSV**, exatamente como no Excel.  
+REGRAS CRÍTICAS:
+- Colunas separadas por vírgulas.
+- Cada linha deve estar em uma linha distinta, sem exceções.
+- Nunca coloque duas linhas na mesma linha do texto.
+- Nunca use barras verticais "|" — apenas CSV puro.
+- Primeira linha é o cabeçalho.
+- Exemplo:
+ID,VariavelPrincipal,VariavelA,VariavelB
+1,3.5,7.2,1.9
+2,4.1,6.7,2.3
 
-**Após a tabela, inclua uma seção de Análise Didática:**
-- Explique de forma clara o que cada coluna de dados representa, correlacionando com o **Tema**.
-- Descreva a **distribuição estatística** aplicada à Variável Principal e o motivo de sua escolha (se foi a do Requisito ou uma suposição).
-- Explique a **relação simulada** entre a Variável Principal e as duas Variáveis Relacionadas, focando no propósito didático.
+### ✔ ESTRUTURA DA TABELA
+A tabela deve ter **50 linhas**:
+- 1 linha de cabeçalho
+- 49 linhas de amostras
 
-## Regras
-- **NUNCA** indique código externo para geração de dados.
-- O resultado deve ser **SOMENTE** o conteúdo gerado (tabela + análise), **sem introduções ou despedidas.**
-- **Não inclua resumo da tabela**. Apresente a tabela por completo.
-- Mantenha um estilo **claro, didático e rigoroso**, adequado ao ensino de estatística.
-- **Limite-se a um minimo de 1000 caracteres no total** (incluindo a tabela e a análise didática).
+Colunas obrigatórias:
+1. Variável Principal — distribuída de acordo com o Requisito.
+2. Variável Relacionada A — correlacionada com a principal.
+3. Variável Relacionada B — outra relação coerente com o Tema.
 
+Valores:
+- aleatórios,
+- não repetidos,
+- distribuídos estatisticamente,
+- coerentes com o Tema.
+
+### ✔ Após o CSV, gere:
+Uma seção chamada **Análise Didática**, explicando:
+- o que representa cada coluna,
+- a distribuição utilizada,
+- como foi simulada a correlação,
+- como interpretar pedagogicamente os dados.
+
+## Regras finais
+- Gere **somente** o CSV + análise didática.
+- Nada de código.
+- Nada de explicações fora da seção final.
+- Mínimo de 1000 caracteres.
 Agora produza a resposta.
 `;
 };
 
-/* --- Função para gerar análise usando API --- */
+/* --- Função para gerar análise usando Gemini --- */
 const gerarAnaliseAI = async (prompt, apiKey) => {
   if (!apiKey) {
-    return `**Modo offline (simulação):** Sem API Key, não é possível gerar dados simulados.`;
+    return `Modo offline: necessário fornecer API Key.`;
   }
 
   const model = "gemini-2.5-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const contents = [{ role: "user", parts: [{ text: prompt }] }];
-  // Mantenha o Google Search (tools) para permitir a busca de "dados reais"
   const tools = [{ google_search: {} }];
 
   try {
@@ -79,21 +111,11 @@ const gerarAnaliseAI = async (prompt, apiKey) => {
 
     const data = await resp.json();
     if (!data?.candidates?.length) throw new Error("Resposta inválida da API");
-    // Se a API retornar a resposta dentro de uma chamada de função (tool call),
-    // é necessário buscar o texto do resultado.
-    const resultText = data.candidates[0].content.parts[0].text;
 
-    // Verifica se houve uma chamada de ferramenta (tool) e retorna a resposta do assistente
-    if (data.candidates[0].content.parts[0].functionCall) {
-      // Para este caso, a resposta completa deve ser processada no próximo passo da interação
-      // Como o prompt pede que a IA gere a tabela diretamente, a resposta deve vir no 'text'
-      return resultText;
-    }
-
-    return resultText;
+    return data.candidates[0].content.parts[0].text;
   } catch (err) {
-    console.error("Erro ao gerar análise:", err);
-    return `**Erro:** falha ao obter resposta. Verifique sua API Key e conexão.`;
+    console.error("Erro:", err);
+    return "**Erro:** falha ao obter resposta.";
   }
 };
 
@@ -117,29 +139,29 @@ const enviarFormulario = async (event) => {
   const question = questionInput.value.trim();
 
   if (!tema || !question) {
-    alert("Preencha o tema e a pergunta/descrição.");
+    alert("Preencha o tema e a pergunta.");
     return;
   }
 
-  // --- ALTERAÇÃO PRINCIPAL AQUI: Gráfico Removido/Substituído ---
-  // A imagem não faz mais sentido, mas deixo o elemento 'chartImage'
-  // apontando para um placeholder, caso a estrutura visual precise dele.
-  chartImage.src = "./assets/placeholder.png";
-
-  result.classList.remove("hidden");
   aiResponse.innerHTML = "<p>Gerando dados simulados...</p>";
-
+  result.classList.remove("hidden");
   askButton.disabled = true;
   askButton.textContent = "Gerando...";
 
-  // --- ALTERAÇÃO CRUCIAL AQUI: Chamada da Nova Função do Prompt ---
   const prompt = buildStatisticalDataPrompt(tema, question);
   const rawText = await gerarAnaliseAI(prompt, apiKey);
 
-  aiResponse.innerHTML = markdownToHTML(rawText);
+  /* --- Separar CSV da análise --- */
+  const parts = rawText.split("Análise Didática");
+  const csv = parts[0].trim();
+  const analise = "Análise Didática" + parts[1];
+
+  const markdown = csvToMarkdown(csv) + "\n\n" + analise;
+
+  aiResponse.innerHTML = markdownToHTML(markdown);
 
   askButton.disabled = false;
-  askButton.textContent = "Gerar Dados"; // Mudança de texto
+  askButton.textContent = "Gerar Dados";
 };
 
 /* --- Resetar formulário --- */
@@ -147,31 +169,21 @@ const resetForm = () => {
   form.reset();
   result.classList.add("hidden");
   aiResponse.innerHTML = "";
-  chartImage.src = "./assets/placeholder.png"; // Reset da imagem/placeholder
 };
 
 /* --- Copiar texto --- */
 const copiarTexto = () => {
   const text = aiResponse.innerText || aiResponse.textContent || "";
-  if (!text) return;
-  navigator.clipboard.writeText(text).then(() => {
-    shareBtn.textContent = "Copiado!";
-    setTimeout(() => (shareBtn.textContent = "Copiar texto"), 1500);
-  });
+  navigator.clipboard.writeText(text);
+  shareBtn.textContent = "Copiado!";
+  setTimeout(() => (shareBtn.textContent = "Copiar texto"), 1500);
 };
 
 /* --- Salvar análise --- */
 const salvarAnalise = () => {
   const text = aiResponse.innerText || aiResponse.textContent || "";
-  if (!text) {
-    alert("Nenhum dado simulado disponível para salvar.");
-    return;
-  }
-  const tema = temaSelect.value || "dados_simulados";
-  const filename = `prisma_${tema}_${new Date()
-    .toISOString()
-    .slice(0, 10)}.txt`;
-  salvarTxt(filename, text);
+  const tema = temaSelect.value || "dados";
+  salvarTxt(`prisma_${tema}.txt`, text);
 };
 
 /* --- Event listeners --- */
