@@ -166,6 +166,8 @@ input, select {
     display: flex;
     justify-content: center;
     margin-top: 0.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
 .actions button {
@@ -176,7 +178,7 @@ button,button.ghost{
     border: 0;
     background-image: linear-gradient(245deg, var(--accent1) 0%, var(--accent2) 50%, var(--accent3) 80%);
     padding: 0.675rem;
-    margin-right: 1rem;
+    margin-right: 0.5rem;
     border-radius: 0.5rem;
     font-weight: bold;
     text-transform: uppercase;
@@ -194,15 +196,18 @@ button.small {
     margin-right: 1rem;
     margin-bottom: 1rem;
     font-size: 0.85rem;
+     
 }
 
 
-#result {
+#result  {
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    flex-direction: row;
+    align-items: baseline;
     gap: 1.5rem;
     margin-top: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .result-left,
